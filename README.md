@@ -69,7 +69,9 @@ GOOGLE_CLOUD_STORAGE_BUCKET="your-gcp-staging-bucket"
 
 # --- Agent & Model Configuration (Optional) ---
 # The Vertex AI model to use for the agent. Defaults to gemini-2.0-flash-001.
-# MODEL_NAME="gemini-2.0-flash-001"
+MODEL_NAME="gemini-2.0-flash-001"
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+
 
 # --- Deployed Agent Details ---
 # The NUMERICAL ID of your deployed agent (a "Reasoning Engine").
