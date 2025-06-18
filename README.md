@@ -62,11 +62,7 @@ pip install -r requirements.txt
 
 This project requires Google Cloud credentials and configuration for deploying the agent, running the UI, and registering it with Agentspace.
 
-First, create a `.env` file in the `resume_agent` directory. A good way to start is by copying the example:
-
-```bash
-cp resume_agent/.env.example resume_agent/.env
-```
+First, create a `.env` file in the `resume_agent` directory. 
 
 Now, open `resume_agent/.env` and fill in the values for your environment.
 
