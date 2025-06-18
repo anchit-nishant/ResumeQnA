@@ -1,7 +1,7 @@
 # resume_agent/tools.py
 
 import io
-import fitz  # PyMuPDF
+from pypdf import PdfReader
 import docx # python-docx
 import google.auth
 import requests
@@ -32,9 +32,16 @@ def _parse_content(filename: str, content: bytes) -> str:
     """Parses content based on file extension."""
     logging.info(f"  Parsing content for: {filename}")
     if filename.lower().endswith('.pdf'):
-        logging.info("    Using PDF parser (PyMuPDF)...")
-        with fitz.open(stream=content, filetype="pdf") as doc:
-            return "".join(page.get_text() for page in doc)
+        logging.info("    Using PDF parser (pypdf)...")
+        try:
+            reader = PdfReader(io.BytesIO(content))
+            text = ""
+            for page in reader.pages:
+                text += page.extract_text() or ""
+            return text
+        except Exception as e:
+            logging.error(f"    Failed to parse PDF {filename} with pypdf: {e}")
+            return f"Error parsing PDF: {e}"
     elif filename.lower().endswith('.docx'):
         logging.info("    Using DOCX parser (python-docx)...")
         doc = docx.Document(io.BytesIO(content))

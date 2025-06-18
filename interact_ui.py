@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="Resume QnA Agent", page_icon="🤖")
 st.title("🤖 Resume QnA Agent")
-st.caption("An AI agent that analyzes résumés from Google Drive against a Job Description.")
+st.caption("An AI agent that analyzes résumés from Google Drive or GCS against a Job Description.")
 
 # --- AGENT CONFIGURATION ---
 # Load environment variables from the .env file in the resume_agent directory
@@ -18,10 +18,15 @@ load_dotenv(dotenv_path=dotenv_path)
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
 AGENT_ENGINE_ID = os.getenv("AGENT_ENGINE_ID")
+DATA_SOURCE = os.getenv("DATA_SOURCE", "gcs").lower()
+GCS_BUCKET = os.getenv("GCS_BUCKET")
 
 # --- VALIDATE CONFIGURATION ---
 if not all([PROJECT_ID, LOCATION, AGENT_ENGINE_ID]):
     st.error("Missing critical configuration. Please ensure GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, and AGENT_ENGINE_ID are set in your .env file.")
+    st.stop()
+if DATA_SOURCE == "gcs" and not GCS_BUCKET:
+    st.error("DATA_SOURCE is 'gcs', but GCS_BUCKET is not set in your .env file.")
     st.stop()
 
 # Build the full resource name from the components
@@ -57,16 +62,21 @@ if "messages" not in st.session_state:
 # this would be dynamically assigned per logged-in user.
 USER_ID = "streamlit-user-001"
 
+# Determine the initial prompt based on the data source
+if DATA_SOURCE == "gcs":
+    initial_prompt = f"Hello! I am configured to use the GCS bucket **'{GCS_BUCKET}'**. Please provide the folder path for the resumes."
+else:
+    initial_prompt = "Hello! I can help you analyze résumés. Please provide the Google Drive folder URL."
+
+
 # Initialize a new remote session if one doesn't exist
 if "remote_session_id" not in st.session_state:
     with st.spinner("Creating new remote session..."):
         print("Creating new remote session...")
-        # Add the required user_id parameter
         response = remote_agent.create_session(user_id=USER_ID)
-        # CORRECTED: Access the session ID using the dictionary key 'id'
         st.session_state.remote_session_id = response["id"]
         # Add the first message from the agent to kick things off
-        st.session_state.messages.append({"role": "assistant", "content": "Hello! I can help you analyze résumés. Please provide the Google Drive folder URL."})
+        st.session_state.messages.append({"role": "assistant", "content": initial_prompt})
         print(f"New session created: {st.session_state.remote_session_id} for user {USER_ID}")
 
 
@@ -82,12 +92,19 @@ if prompt := st.chat_input("Your message..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    # If this is the first user message and we are in GCS mode, prepend the bucket name
+    is_first_user_message = len([m for m in st.session_state.messages if m['role'] == 'user']) == 1
+    final_prompt = prompt
+    if DATA_SOURCE == "gcs" and is_first_user_message:
+        final_prompt = f"gs://{GCS_BUCKET}/{prompt}"
+        st.info(f"Using GCS path: `{final_prompt}`")
+
     # Call the remote agent and display its streamed response
     with st.chat_message("assistant"):
         response_stream = remote_agent.stream_query(
             user_id=USER_ID,
             session_id=st.session_state.remote_session_id,
-            message=prompt,
+            message=final_prompt,
         )
 
         response_placeholder = st.empty()
