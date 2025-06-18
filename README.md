@@ -37,8 +37,8 @@ Follow these instructions to set up and run the project on your local machine fo
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd swiggy-resume-stackrank
+git clone https://github.com/anchit-nishant/ResumeQnA.git
+cd ResumeQnA
 ```
 
 ### 2. Set Up a Virtual Environment
