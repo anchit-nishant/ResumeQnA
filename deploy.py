@@ -13,7 +13,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string("project_id", None, "GCP project ID.")
 flags.DEFINE_string("location", None, "GCP location.")
 flags.DEFINE_string("bucket", None, "GCP bucket for staging.")
-flags.DEFINE_string("resource_id", None, "ReasoningEngine resource ID for deletion or update.")
+flags.DEFINE_string("resource_id", None, "AgentEngine resource ID for deletion or update.")
 
 flags.DEFINE_bool("list", False, "List all agents.")
 flags.DEFINE_bool("create", False, "Creates a new agent.")
@@ -114,7 +114,7 @@ def main(argv: list[str]) -> None:
     resource_id = (
         FLAGS.resource_id
         if FLAGS.resource_id
-        else os.getenv("REASONING_ENGINE_ID")
+        else os.getenv("AGENT_ENGINE_ID")
     )
 
 
@@ -148,12 +148,12 @@ def main(argv: list[str]) -> None:
         create()
     elif FLAGS.update:
         if not resource_id:
-            print("Error: --resource_id or REASONING_ENGINE_ID in .env is required to update an agent.")
+            print("Error: --resource_id or AGENT_ENGINE_ID in .env is required to update an agent.")
             return
         update(resource_id, project_id, location)
     elif FLAGS.delete:
         if not resource_id:
-            print("Error: --resource_id or REASONING_ENGINE_ID in .env is required to delete an agent.")
+            print("Error: --resource_id or AGENT_ENGINE_ID in .env is required to delete an agent.")
             return
         delete(resource_id, project_id, location)
     else:

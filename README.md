@@ -86,9 +86,9 @@ GOOGLE_GENAI_USE_VERTEXAI=TRUE
 
 
 # --- Deployed Agent Details ---
-# The NUMERICAL ID of your deployed agent (a "Reasoning Engine").
+# The NUMERICAL ID of your deployed agent (an "Agent Engine").
 # You will get this after running 'python deploy.py --create' for the first time.
-REASONING_ENGINE_ID="1234567890123456789"
+AGENT_ENGINE_ID="1234567890123456789"
 
 # --- Agentspace Registration Details ---
 # The simple string ID of your "Agent App" (an "Engine" in the Discovery Engine API).
@@ -108,16 +108,16 @@ AGENT_TOOL_DESCRIPTION="You are a specialized HR assistant for technical roles."
 
 **Why the different ID formats?**
 
-You'll notice `REASONING_ENGINE_ID` is a full path while `AGENTSPACE_APP_ID` is a simple string. This is not an error! It's because they are two different kinds of resources managed by two different Google Cloud APIs, and each API requires a specific format:
+You'll notice `AGENT_ENGINE_ID` is a full path while `AGENTSPACE_APP_ID` is a simple string. This is not an error! It's because they are two different kinds of resources managed by two different Google Cloud APIs, and each API requires a specific format:
 
-*   **Reasoning Engine:** Managed by the Vertex AI SDK, which uses the full resource path.
+*   **Agent Engine:** Managed by the Vertex AI SDK, which uses the full resource path.
 *   **Agentspace App:** Managed by the Discovery Engine REST API, which builds its request URL using the simple App ID.
 
 The scripts handle this difference correctly. Just make sure to copy the IDs in the format specified below.
 
 **Where to find these values:**
 
-*   `REASONING_ENGINE_ID`: Run `python deploy.py --create`. The script will print the full resource name (e.g., `projects/.../reasoningEngines/12345...`). **Copy only the final numerical part** into your `.env` file.
+*   `AGENT_ENGINE_ID`: Run `python deploy.py --create`. The script will print the full resource name (e.g., `projects/.../reasoningEngines/12345...`). **Copy only the final numerical part** into your `.env` file.
 *   `AGENTSPACE_APP_ID`: This is the **simple ID** for your "Agent App" container. In the Google Cloud Console, navigate to **Vertex AI -> Agents -> Agentspace**. Select your agent application. The ID is the last part of the URL in your browser (e.g., `.../engines/your-agentspace-app-id`). Copy only that final part.
 *   `OAUTH_CLIENT_ID` and `OAUTH_CLIENT_SECRET`: These come from the OAuth 2.0 Client ID you must create in the Google Cloud Console under **APIs & Services -> Credentials**. Ensure it is configured as a "Web application."
 
@@ -148,7 +148,7 @@ This will use the `root_agent` defined in `resume_agent/agent.py` for local test
 The `interact_ui.py` script provides a user-friendly chat interface to interact with your *deployed* agent. Before running it, make sure you have:
 
 1.  Run `python deploy.py --create` at least once.
-2.  Copied the resulting `REASONING_ENGINE_ID` into your `resume_agent/.env` file.
+2.  Copied the resulting `AGENT_ENGINE_ID` into your `resume_agent/.env` file.
 
 To run the UI:
 
@@ -177,11 +177,11 @@ To deploy your agent to Vertex AI for the first time, use the `--create` flag.
 python deploy.py --create
 ```
 
-The script will output the full resource name of the newly created agent (e.g., `projects/.../reasoningEngines/12345...`). **Copy only the final numerical part** of this name and save it as `REASONING_ENGINE_ID` in your `.env` file.
+The script will output the full resource name of the newly created agent (e.g., `projects/.../reasoningEngines/12345...`). **Copy only the final numerical part** of this name and save it as `AGENT_ENGINE_ID` in your `.env` file.
 
 ### Update an Existing Agent
 
-If you've made changes to your agent's code (e.g., in `tools.py` or `agent.py`), update the deployed version using the `--update` flag. Make sure your `.env` file contains the correct `REASONING_ENGINE_ID`.
+If you've made changes to your agent's code (e.g., in `tools.py` or `agent.py`), update the deployed version using the `--update` flag. Make sure your `.env` file contains the correct `AGENT_ENGINE_ID`.
 
 ```bash
 python deploy.py --update
@@ -197,7 +197,7 @@ python deploy.py --list
 
 ### Delete an Agent
 
-To remove a deployed agent from Vertex AI, use the `--delete` flag. It will use the `REASONING_ENGINE_ID` from your `.env` file.
+To remove a deployed agent from Vertex AI, use the `--delete` flag. It will use the `AGENT_ENGINE_ID` from your `.env` file.
 
 ```bash
 python deploy.py --delete

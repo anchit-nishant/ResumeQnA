@@ -17,15 +17,15 @@ load_dotenv(dotenv_path=dotenv_path)
 
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
-REASONING_ENGINE_ID = os.getenv("REASONING_ENGINE_ID")
+AGENT_ENGINE_ID = os.getenv("AGENT_ENGINE_ID")
 
 # --- VALIDATE CONFIGURATION ---
-if not all([PROJECT_ID, LOCATION, REASONING_ENGINE_ID]):
-    st.error("Missing critical configuration. Please ensure GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, and REASONING_ENGINE_ID are set in your .env file.")
+if not all([PROJECT_ID, LOCATION, AGENT_ENGINE_ID]):
+    st.error("Missing critical configuration. Please ensure GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, and AGENT_ENGINE_ID are set in your .env file.")
     st.stop()
 
 # Build the full resource name from the components
-full_reasoning_engine_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{REASONING_ENGINE_ID}"
+full_reasoning_engine_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{AGENT_ENGINE_ID}"
 # --- END CONFIGURATION ---
 
 

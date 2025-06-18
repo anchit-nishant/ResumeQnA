@@ -53,7 +53,7 @@ load_dotenv(dotenv_path=dotenv_path)
 # -- Project and Agent Details --
 PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION")
-REASONING_ENGINE_ID = os.getenv("REASONING_ENGINE_ID") # The NUMERIC ID from `python deploy.py --create`
+AGENT_ENGINE_ID = os.getenv("AGENT_ENGINE_ID") # The NUMERIC ID from `python deploy.py --create`
 AGENTSPACE_APP_ID = os.getenv("AGENTSPACE_APP_ID") # The ID of your Agent App in Agentspace
 
 # -- OAuth Credentials (only used if registering with OAuth) --
@@ -68,11 +68,11 @@ AGENT_TOOL_DESCRIPTION = os.getenv("AGENT_TOOL_DESCRIPTION", "You are an expert 
 
 # --- Validate required variables ---
 REQUIRED_VARS_OAUTH = [
-    "PROJECT_ID", "LOCATION", "REASONING_ENGINE_ID", "AGENTSPACE_APP_ID",
+    "PROJECT_ID", "LOCATION", "AGENT_ENGINE_ID", "AGENTSPACE_APP_ID",
     "OAUTH_CLIENT_ID", "OAUTH_CLIENT_SECRET"
 ]
 REQUIRED_VARS_NO_OAUTH = [
-    "PROJECT_ID", "LOCATION", "REASONING_ENGINE_ID", "AGENTSPACE_APP_ID",
+    "PROJECT_ID", "LOCATION", "AGENT_ENGINE_ID", "AGENTSPACE_APP_ID",
 ]
 
 
@@ -150,7 +150,7 @@ def manage_agent(headers, action, use_oauth):
         
     if action == "register":
         # Build the full resource name for the payload
-        full_reasoning_engine_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{REASONING_ENGINE_ID}"
+        full_reasoning_engine_name = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{AGENT_ENGINE_ID}"
 
         agent_payload = {
             "displayName": AGENT_DISPLAY_NAME, "description": AGENT_DESCRIPTION,
