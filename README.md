@@ -1,8 +1,8 @@
 # Resume QnA Agent on Agentspace
 
 This project implements a Generative AI agent to address the following use case:
-- Recruiters collect resumes and dump them in Google Drive folders.
-- This Agent integrates with Google Drive and answers questions related to the resumes, such as:
+- Recruiters collect resumes and dump them in a centralized cloud folder.
+- This Agent integrates with either Google Drive or Google Cloud Storage (GCS) and answers questions related to the resumes, such as:
   - Stack ranking of resumes by scoring against a job description.
   - Answering specific questions about resume content.
 
@@ -10,7 +10,7 @@ This project includes deployment scripts for deploying the agent to Vertex AI Ag
 
 Tech Stack:
 - Google Agent Development Kit (ADK), Python 
-- Google Drive SDK
+- Google Drive SDK & Google Cloud Storage Client Library
 - Agent Engine
 - AgentSpace
 - Streamlit
@@ -18,6 +18,8 @@ Tech Stack:
 
 ## Features
 
+- **Dual Data Source**: Supports both Google Drive and Google Cloud Storage (GCS) as a source for resumes.
+- **High-Speed GCS Mode**: When using GCS, the agent uses parallel downloads to ingest resumes and job descriptions for maximum speed.
 - **Google Drive Integration**: Recursively scans a specified Google Drive folder for resumes.
 - **Multi-Format Parsing**: Supports parsing text from PDF, DOCX, and TXT files.
 - **LLM-Powered Analysis**: Utilizes a language model to score and rank resumes based on a provided job description.
@@ -72,8 +74,15 @@ Now, open `resume_agent/.env` and fill in the values for your environment.
 GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
 # The location for your project (e.g., "us-central1").
 GOOGLE_CLOUD_LOCATION="us-central1"
-# A unique Google Cloud Storage bucket name for staging.
+# A unique Google Cloud Storage bucket name for staging deployment files.
 GOOGLE_CLOUD_STORAGE_BUCKET="your-gcp-staging-bucket"
+
+# --- Data Source Configuration ---
+# Set the source for resumes and job descriptions.
+# Options: "gcs" or "drive". Defaults to "gcs" for best performance.
+DATA_SOURCE="gcs"
+# If using GCS, specify ONLY the bucket name. The agent will ask for the folder path.
+GCS_BUCKET="your-resume-bucket-name"
 
 # --- Agent & Model Configuration (Optional) ---
 # The Vertex AI model to use for the agent. Defaults to gemini-2.0-flash-001.
@@ -104,12 +113,7 @@ AGENT_TOOL_DESCRIPTION="You are a specialized HR assistant for technical roles."
 
 **Why the different ID formats?**
 
-You'll notice `AGENT_ENGINE_ID` is a full path while `AGENTSPACE_APP_ID` is a simple string. This is not an error! It's because they are two different kinds of resources managed by two different Google Cloud APIs, and each API requires a specific format:
-
-*   **Agent Engine:** Managed by the Vertex AI SDK, which uses the full resource path.
-*   **Agentspace App:** Managed by the Discovery Engine REST API, which builds its request URL using the simple App ID.
-
-The scripts handle this difference correctly. Just make sure to copy the IDs in the format specified below.
+You'll notice `AGENT_ENGINE_ID` is a numerical ID while `AGENTSPACE_APP_ID` is a simple string. This is because they are two different kinds of resources managed by two different Google Cloud APIs, and each API has its own requirements. The scripts handle this difference correctly.
 
 **Where to find these values:**
 
@@ -125,7 +129,7 @@ Log in with your Google Cloud credentials. This command will open a browser wind
 gcloud auth application-default login
 ```
 
-This makes your user credentials available to the application, which is necessary for the agent to interact with Google Cloud services like Vertex AI and Google Drive on your behalf.
+This makes your user credentials available to the application, which is necessary for the agent to interact with Google Cloud services like Vertex AI, Google Drive, and GCS on your behalf.
 
 ## Local Development with ADK Web
 
@@ -137,7 +141,7 @@ To start the local web server, run:
 adk web
 ```
 
-This will use the `root_agent` defined in `resume_agent/agent.py` for local testing.
+This will use the `root_agent` defined in `resume_agent/agent.py` for local testing. Based on your `.env` configuration, the agent will ask for either a GCS folder path or a Google Drive URL.
 
 ## Running the Streamlit UI
 
@@ -250,7 +254,12 @@ The script will prompt you for the numeric ID of the agent to delete (which you 
 
 ## Interacting with the Deployed Agent
 
-Once your agent is deployed, you can interact with it through the Vertex AI console or via the API. You can find your agent in the Google Cloud Console under **Vertex AI -> Agents**. From there, you can test it in the console, integrate it with other services, or get the necessary details to call it programmatically.
+Once your agent is deployed, you can interact with it through the Vertex AI console or via the API. The agent's behavior will depend on the `DATA_SOURCE` variable you set in `resume_agent/.env`.
+
+- If `DATA_SOURCE="gcs"`, the agent will ask for the folder path within the `GCS_BUCKET` you defined.
+- If `DATA_SOURCE="drive"`, the agent will ask for the full Google Drive folder URL.
+
+You can find your agent in the Google Cloud Console under **Vertex AI -> Agents**. From there, you can test it in the console, integrate it with other services, or get the necessary details to call it programmatically.
 
 ## License
 

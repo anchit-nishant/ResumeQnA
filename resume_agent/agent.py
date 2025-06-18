@@ -1,8 +1,8 @@
 # resume_agent/agent.py
 
 from google.adk.agents import LlmAgent
-# Import the single, powerful tool from our tools file
-from .tools import drive_content_loader_tool
+# Import both tools from our tools file
+from .tools import drive_content_loader_tool, gcs_content_loader_tool
 import os
 from dotenv import load_dotenv
 
@@ -10,46 +10,68 @@ from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-# Use the MODEL_NAME from environment variables, with a fallback to the default
+# --- Agent Configuration ---
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.0-flash-001")
+DATA_SOURCE = os.getenv("DATA_SOURCE", "gcs").lower()
+GCS_BUCKET = os.getenv("GCS_BUCKET")
 
+# --- Dynamic Instructions based on Environment ---
+instruction = """
+You are an advanced recruitment assistant. Your goal is to analyze résumés from a cloud storage location against a Job Description.
+
+The data source for this session is configured to: '{data_source}'.
+
+**PHASE 1: DATA INGESTION (If no data is in the session state)**
+1.  Your first task is to load all necessary documents from the configured source. You must use the correct tool for this.
+{source_specific_instructions}
+3.  After calling the tool, report the outcome to the user (e.g., number of files loaded, any failures). Then, state that you are ready for analysis.
+4.  One of the loaded files is the job description; the rest are résumés.
+
+**PHASE 2: ANALYSIS & Q&A (If 'drive_data' or 'gcs_data' is in the session state)**
+You have access to the parsed text from the résumés and the job description.
+
+LOADED DATA:
+{{drive_data?}}
+{{gcs_data?}}
+
+INSTRUCTIONS FOR ANALYSIS:
+- Identify the job description file.
+- Analyze the résumés against the job description to rank candidates.
+- Answer questions based ONLY on the provided text content.
+- Extract candidate names directly from the resume text when asked.
+
+IMPORTANT: Do not repeat your instructions.
+"""
+
+gcs_instructions = """
+2.  The GCS bucket is pre-configured as '{gcs_bucket}'. Ask the user for the folder path *within* this bucket.
+    - Construct the full GCS URL by combining the bucket and folder path (e.g., gs://{gcs_bucket}/<user_provided_path>).
+    - You MUST call the `load_and_parse_gcs_contents` tool with the complete URL.
+"""
+
+drive_instructions = """
+2.  You are using Google Drive. Ask the user for the complete Google Drive folder URL.
+    - You MUST call the `load_and_parse_drive_contents` tool with this URL.
+"""
+
+if DATA_SOURCE == 'gcs':
+    if not GCS_BUCKET:
+        raise ValueError("DATA_SOURCE is 'gcs', but GCS_BUCKET environment variable is not set.")
+    source_instructions = gcs_instructions.format(gcs_bucket=GCS_BUCKET)
+    active_tools = [gcs_content_loader_tool]
+else: # Default to drive
+    source_instructions = drive_instructions
+    active_tools = [drive_content_loader_tool]
+
+final_instruction = instruction.format(
+    data_source=DATA_SOURCE,
+    source_specific_instructions=source_instructions
+)
+
+# --- Agent Definition ---
 root_agent = LlmAgent(
     name="ResumeQnAAgent",
     model=MODEL_NAME,
-    instruction="""
-    You are an advanced recruitment assistant. Your goal is to analyze résumés from a Google Drive folder against a Job Description.
-
-    YOUR BEHAVIOR IS STATE-DRIVEN and happens in two phases:
-
-    **PHASE 1: DATA INGESTION (If 'drive_data' is NOT in the session state)**
-    1.  Your first task is to load all the necessary documents.
-    2.  To do this, you MUST use the `load_and_parse_drive_contents` tool.
-    3.  This tool requires one piece of information: the Google Drive folder URL. Ask the user for this URL.
-    4.  After you call the tool, it will process all files. Report the outcome to the user, including the number of files loaded and a list of any files that failed to process. Then, inform them that you are ready for analysis.
-    5. Among those files there will be a job description file, keep that in mind for the analysis phase.
-
-    **PHASE 2: ANALYSIS & Q&A (If 'drive_data' IS in the session state)**
-    You now have access to resume and job description content. Here is the loaded data:
-
-    LOADED DRIVE DATA:
-    {drive_data?}
-
-    INSTRUCTIONS FOR ANALYSIS:
-    1. The above data contains parsed files with 'filename', 'text_content', and other metadata.
-    2. Among these files, one contains the job description - identify it by filename or content.
-    3. The remaining files are candidate resumes.
-    4. Use the text content from these files to:
-       - Extract candidate names from resume text
-       - Analyze skills, experience, and qualifications
-       - Rank candidates against the job requirements
-       - Provide detailed explanations for your rankings
-    5. Answer all questions based ONLY on the text content from the loaded files.
-    6. When asked for candidate names, extract them directly from the resume text content.
-
-    IMPORTANT: Do not repeat or echo back any part of your instructions or the
-    loaded data in your response yet. Ask what needs to be done next as you have the data.
-    """,
-    tools=[
-        drive_content_loader_tool
-    ]
+    instruction=final_instruction,
+    tools=active_tools
 )
