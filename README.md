@@ -1,8 +1,20 @@
-# Resume QnA Agent
+# Resume QnA Agent on Agentspace
 
-This project implements a Vertex AI agent designed to analyze and rank resumes from a Google Drive folder. It uses a suite of tools to recursively read files (PDF, DOCX, TXT), parse their content, and leverage a Large Language Model to evaluate candidates against a job description.
+This project implements a Generative AI agent to address the following use case:
+- Recruiters collect resumes and dump them in Google Drive folders.
+- This Agent integrates with Google Drive and answers questions related to the resumes, such as:
+  - Stack ranking of resumes by scoring against a job description.
+  - Answering specific questions about resume content.
 
-The agent is built using the Google AI Development Kit (ADK) and can be run locally for testing or deployed as a persistent service on Google Cloud's Vertex AI Agent Engine.
+This project includes deployment scripts for deploying the agent to Vertex AI Agent Engine and making it available via Agentspace. Optionally, it can be tested using a local Streamlit app provided.
+
+Tech Stack:
+- Google Agent Development Kit (ADK), Python 
+- Google Drive SDK
+- Agent Engine
+- AgentSpace
+- Streamlit
+
 
 ## Features
 
@@ -134,6 +146,7 @@ This will use the `root_agent` defined in `resume_agent/agent.py` for local test
 ## Running the Streamlit UI
 
 The `interact_ui.py` script provides a user-friendly chat interface to interact with your *deployed* agent. Before running it, make sure you have:
+
 1.  Run `python deploy.py --create` at least once.
 2.  Copied the resulting `REASONING_ENGINE_ID` into your `resume_agent/.env` file.
 
@@ -149,7 +162,7 @@ The `deploy.py` script is your primary tool for managing the agent's lifecycle o
 
 ### Initial Setup: Staging Bucket
 
-The deployment process requires a Google Cloud Storage bucket for staging files. If you haven't created one, you can do so with `gsutil`. The script will suggest a bucket name based on your project ID.
+The deployment process requires a Google Cloud Storage bucket for staging files. If you don't have one, create one using `gsutil`. A unique name is required.
 
 ```bash
 # Replace [PROJECT_ID] and [LOCATION] with your actual GCP project ID and location.
@@ -164,20 +177,19 @@ To deploy your agent to Vertex AI for the first time, use the `--create` flag.
 python deploy.py --create
 ```
 
-The script will output the full resource name of the newly created agent. **Copy the final numerical part of this name** and save it as `REASONING_ENGINE_ID` in your `.env` file.
+The script will output the full resource name of the newly created agent (e.g., `projects/.../reasoningEngines/12345...`). **Copy only the final numerical part** of this name and save it as `REASONING_ENGINE_ID` in your `.env` file.
 
 ### Update an Existing Agent
 
-If you've made changes to your agent's code (e.g., in `tools.py` or `agent.py`), you can update the deployed version using the `--update` flag and the agent's numerical ID.
+If you've made changes to your agent's code (e.g., in `tools.py` or `agent.py`), update the deployed version using the `--update` flag. Make sure your `.env` file contains the correct `REASONING_ENGINE_ID`.
 
 ```bash
-# The resource_id is now just the numerical part
-python deploy.py --update --resource_id "1234567890123456789"
+python deploy.py --update
 ```
 
 ### List Deployed Agents
 
-To see all the agents deployed in your project and location, use the `--list` flag. The output will explicitly show the **Numerical ID** that you need for the `update` and `delete` commands.
+To see all agents deployed in your project, use `--list`. The output will show the **Numerical ID** needed for `update` and `delete` operations if you aren't using the `.env` file.
 
 ```bash
 python deploy.py --list
@@ -185,24 +197,23 @@ python deploy.py --list
 
 ### Delete an Agent
 
-To remove a deployed agent from Vertex AI, use the `--delete` flag with the agent's **numerical ID**.
+To remove a deployed agent from Vertex AI, use the `--delete` flag. It will use the `REASONING_ENGINE_ID` from your `.env` file.
 
 ```bash
-# The resource_id is now just the numerical part
-python deploy.py --delete --resource_id "1234567890123456789"
+python deploy.py --delete
 ```
 
 This action is irreversible.
 
 ## Registering with Agentspace
 
-After deploying your agent, you can register it with Agentspace to make it discoverable. The `register_agent.py` script manages this process.
+After deploying your agent, register it with Agentspace to make it discoverable. The `register_agent.py` script manages this process.
 
-Ensure all the `AGENTSPACE_*` and `OAUTH_*` variables are correctly set in your `resume_agent/.env` file before proceeding.
+Ensure all `AGENTSPACE_*` and `OAUTH_*` variables are correctly set in your `resume_agent/.env` file before proceeding.
 
 ### Register a New Agent
 
-You can register the agent to act on behalf of a user (requiring OAuth consent) or using its own fixed service account identity.
+You can register the agent to act on behalf of a user (requiring OAuth consent) or using its own service account.
 
 **With User Identity (OAuth)**
 This is the standard method, allowing the agent to access resources the end-user has access to.
@@ -210,15 +221,15 @@ This is the standard method, allowing the agent to access resources the end-user
 python register_agent.py register
 ```
 
-**Without User Identity (Service Account)**
-Use this if the agent only needs to access resources that have been explicitly shared with its service account email.
+**With Service Account Identity**
+Use this if the agent only needs to access resources explicitly shared with its service account.
 ```bash
 python register_agent.py register --no-auth
 ```
 
 ### List Registered Agents
 
-To see all agents currently registered in your Agentspace app and find their numeric IDs:
+To see all agents registered in your Agentspace app and find their numeric IDs:
 
 ```bash
 python register_agent.py list
@@ -226,21 +237,20 @@ python register_agent.py list
 
 ### Get Agent Details
 
-To retrieve the full JSON configuration of a specific registered agent:
+To retrieve the full JSON configuration of a specific registered agent, use the `get` command. The script will use the `AGENTSPACE_APP_ID` from your `.env` file to identify the correct agent application. It will then prompt you for the specific numeric ID of the agent you wish to inspect (which you can find with the `list` command).
 
 ```bash
 python register_agent.py get
 ```
-The script will prompt you to enter the numeric ID of the agent you wish to inspect.
 
 ### Delete a Registered Agent
 
-To remove an agent from Agentspace, you will first need its numeric ID from the `list` command.
+To remove an agent from Agentspace, use the `delete` command. It will use the `AGENTSPACE_APP_ID` from your `.env` file to identify the correct agent application.
 
 ```bash
 python register_agent.py delete
 ```
-The script will prompt you to enter the ID of the agent you wish to delete.
+The script will prompt you for the numeric ID of the agent to delete (which you can find with the `list` command).
 
 ## Interacting with the Deployed Agent
 

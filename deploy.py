@@ -110,6 +110,12 @@ def main(argv: list[str]) -> None:
     )
     if not bucket and project_id:
         bucket = f"{project_id}-adk-staging-bucket"
+    
+    resource_id = (
+        FLAGS.resource_id
+        if FLAGS.resource_id
+        else os.getenv("REASONING_ENGINE_ID")
+    )
 
 
     print(f"Using Project: {project_id}")
@@ -141,15 +147,15 @@ def main(argv: list[str]) -> None:
         print(f"Ensure bucket exists: gsutil mb -p {project_id} -l {location} gs://{bucket}\n")
         create()
     elif FLAGS.update:
-        if not FLAGS.resource_id:
-            print("Error: --resource_id is required to update an agent.")
+        if not resource_id:
+            print("Error: --resource_id or REASONING_ENGINE_ID in .env is required to update an agent.")
             return
-        update(FLAGS.resource_id, project_id, location)
+        update(resource_id, project_id, location)
     elif FLAGS.delete:
-        if not FLAGS.resource_id:
-            print("Error: --resource_id is required to delete an agent.")
+        if not resource_id:
+            print("Error: --resource_id or REASONING_ENGINE_ID in .env is required to delete an agent.")
             return
-        delete(FLAGS.resource_id, project_id, location)
+        delete(resource_id, project_id, location)
     else:
         print("No command specified. Use --create, --list, --delete, or --update.")
 

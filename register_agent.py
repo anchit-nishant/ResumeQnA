@@ -67,13 +67,13 @@ AGENT_DESCRIPTION = os.getenv("AGENT_DESCRIPTION", "Analyzes resumes against job
 AGENT_TOOL_DESCRIPTION = os.getenv("AGENT_TOOL_DESCRIPTION", "You are an expert HR assistant. Your task is to analyze resumes and job descriptions from the shared corporate Google Drive folder and answer questions about them.")
 
 # --- Validate required variables ---
-REQUIRED_VARS = [
+REQUIRED_VARS_OAUTH = [
     "PROJECT_ID", "LOCATION", "REASONING_ENGINE_ID", "AGENTSPACE_APP_ID",
     "OAUTH_CLIENT_ID", "OAUTH_CLIENT_SECRET"
 ]
-missing_vars = [var for var in REQUIRED_VARS if not globals()[var]]
-if missing_vars:
-    raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}. Please define them in resume_agent/.env")
+REQUIRED_VARS_NO_OAUTH = [
+    "PROJECT_ID", "LOCATION", "REASONING_ENGINE_ID", "AGENTSPACE_APP_ID",
+]
 
 
 # ==============================================================================
@@ -180,12 +180,22 @@ def main():
     """Main function to orchestrate agent management."""
     parser = argparse.ArgumentParser(description="Manage Agentspace Agent Registration.",
         formatter_class=argparse.RawTextHelpFormatter)
-    # **FIXED HERE:** Added 'list' to the available choices.
     parser.add_argument("action", choices=["register", "delete", "get", "list"], help="The action to perform.")
     parser.add_argument("--no-auth", dest="use_oauth", action="store_false",
         help="Flag to register the agent WITHOUT OAuth.\nAgent will use its own fixed service account identity.")
     parser.set_defaults(use_oauth=True)
     args = parser.parse_args()
+
+    # Validate environment variables based on action
+    if args.action == "register" and args.use_oauth:
+        required = REQUIRED_VARS_OAUTH
+    else:
+        required = REQUIRED_VARS_NO_OAUTH
+    
+    missing_vars = [var for var in required if not globals()[var]]
+    if missing_vars:
+        raise EnvironmentError(f"Missing required environment variables for this action: {', '.join(missing_vars)}. Please define them in resume_agent/.env")
+
 
     auth_token = get_gcp_token()
     headers = {
