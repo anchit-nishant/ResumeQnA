@@ -207,6 +207,16 @@ This action is irreversible.
 
 ## Registering with Agentspace
 
+**IMPORTANT: Enable IAM Permissions for Agentspace**
+Before you can successfully register and use the agent in Agentspace, you must grant Agentspace's service account permission to invoke your deployed Vertex AI agent.
+
+-   Navigate to the **IAM** page in the Google Cloud Console.
+-   On the right side, find and check the box for **"Include Google-provided role grants"**.
+-   Use the search filter to find the service account with a name like: `service-<YOUR_PROJECT_NUMBER>@gcp-sa-discoveryengine.iam.gserviceaccount.com`.
+-   Grant this service account the following two roles:
+    -   `Vertex AI User`
+    -   `Vertex AI Viewer`
+
 After deploying your agent, register it with Agentspace to make it discoverable. The `register_agent.py` script manages this process.
 
 Ensure all `AGENTSPACE_*` and `OAUTH_*` variables are correctly set in your `resume_agent/.env` file before proceeding.

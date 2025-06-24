@@ -18,23 +18,23 @@ from dotenv import load_dotenv
 #       ** Step 2: Run from your terminal **
 #
 #       --- To LIST all registered agents and find their IDs ---
-#       $ python manage_agent.py list
+#       $ python register_agent.py list
 #
 #       --- To DELETE a registered agent ---
 #       First, use 'list' to find the agent's numeric ID.
-#       $ python manage_agent.py delete
+#       $ python register_agent.py delete
 #       (The script will then prompt you for the Agent ID)
 #
 #       --- To REGISTER the agent WITHOUT using user identity (OAuth) ---
 #       **Pre-requisite**: Share your Google Drive files/folders with:
 #       service-<projectNumber>@gcp-sa-discoveryengine.iam.gserviceaccount.com
-#       $ python manage_agent.py register --no-auth
+#       $ python register_agent.py register --no-auth
 #
 #       --- To REGISTER the agent WITH user identity (OAuth) ---
-#       $ python manage_agent.py register
+#       $ python register_agent.py register
 #
 #       --- To GET the details of a specific registered agent ---
-#       $ python manage_agent.py get
+#       $ python register_agent.py get
 #       (The script will then prompt you for the Agent ID)
 #
 # ==============================================================================
@@ -62,7 +62,7 @@ OAUTH_CLIENT_SECRET = os.getenv("OAUTH_CLIENT_SECRET")
 
 # -- Agent Configuration --
 AGENT_AUTH_ID = os.getenv("AGENT_AUTH_ID", "talentrank-gdrive-auth") # Default value if not set
-AGENT_DISPLAY_NAME = os.getenv("AGENT_DISPLAY_NAME", "TalentRank Agent")
+AGENT_DISPLAY_NAME = os.getenv("AGENT_DISPLAY_NAME", "ResumeQnA Agent")
 AGENT_DESCRIPTION = os.getenv("AGENT_DESCRIPTION", "Analyzes resumes against job descriptions from a central repository.")
 AGENT_TOOL_DESCRIPTION = os.getenv("AGENT_TOOL_DESCRIPTION", "You are an expert HR assistant. Your task is to analyze resumes and job descriptions from the shared corporate Google Drive folder and answer questions about them.")
 
